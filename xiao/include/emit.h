@@ -24,7 +24,8 @@ enum {
     OP_INT3 = 0xCC
 };
 
-code_t push_imm32(code_t begin, uint32_t val);
+/// move a 64 bit value into r10.
+code_t mov_imm64(code_t begin, uint64_t val);
 
 code_t call_addr32(code_t begin, address_t addr);
 

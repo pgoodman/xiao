@@ -59,7 +59,7 @@ public:
 struct EntryPatch : public AbstractPatch {
 public:
     enum : uint8_t {
-        PATCH_SIZE = /*push*/ 7U + /*call*/ 5U,
+        PATCH_SIZE = /*mov*/ 10 + /*call*/ 5U,
         NOP_SEQ_SIZE = PATCH_SIZE - /*jmp8*/ 2U,
         KIND = PATCH_ENTRY
     };
@@ -74,8 +74,8 @@ public:
 struct ReturnPatch : public AbstractPatch {
 public:
     enum : uint8_t {
-        PATCH_SIZE = 10U,
-        NOP_SEQ_SIZE = 10U,
+        PATCH_SIZE = 16U,
+        NOP_SEQ_SIZE = 16U,
         KIND = PATCH_EXIT_RETURN
     };
 
@@ -89,8 +89,8 @@ public:
 struct NonLocalJumpPatch : public AbstractPatch {
 public:
     enum : uint8_t {
-        PATCH_SIZE = 10U,
-        NOP_SEQ_SIZE = 10U,
+        PATCH_SIZE = 16U,
+        NOP_SEQ_SIZE = 16U,
         KIND = PATCH_EXIT_NON_LOCAL
     };
 
@@ -104,8 +104,8 @@ public:
 struct LocalJumpPatch : public AbstractPatch {
 public:
     enum : uint8_t {
-        PATCH_SIZE = 10U,
-        NOP_SEQ_SIZE = 10U,
+        PATCH_SIZE = 16U,
+        NOP_SEQ_SIZE = 16U,
         KIND = PATCH_ENTER_LOCAL
     };
 

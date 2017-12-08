@@ -34,12 +34,12 @@ PATCH_CONSTRUCTOR(ReturnPatch)
 PATCH_CONSTRUCTOR(NonLocalJumpPatch)
 PATCH_CONSTRUCTOR(LocalJumpPatch)
 
-static uint32_t imm32(Function *func) throw() {
-    return static_cast<uint32_t>(unsafe_cast<uint64_t>(func));
+static uint64_t imm64(Function *func) throw() {
+    return reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(func));
 }
 
 void EntryPatch::apply(void) throw() {
-    emit::call_addr32(emit::push_imm32(this->start, imm32(this->func)),
+    emit::call_addr32(emit::mov_imm64(this->start, imm64(this->func)),
                       EntryStub);
 }
 
@@ -51,7 +51,7 @@ void EntryPatch::revert(void) throw() {
 }
 
 void ReturnPatch::apply(void) throw() {
-    emit::jmp_addr32(emit::push_imm32(this->start, imm32(this->func)),
+    emit::jmp_addr32(emit::mov_imm64(this->start, imm64(this->func)),
                      ReturnStub);
 }
 

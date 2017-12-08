@@ -7,11 +7,21 @@
 // make xiao into a statically linked library
 // make a xc and xcc
 
+#ifdef __APPLE__
+# define SYMBOL(x) _ ## x
+#else
+# define SYMBOL(x) x
+#endif
+
+#ifdef __APPLE__
     .section    __TEXT,__text,regular,pure_instructions
+#else
+    .text
+#endif
 
 // entrypoint for when a function is called; this is called on entering
 // a function, before any function prologue
-BEGIN_EXPORTED_FUNCTION(__ZN4xiao9EntryStubEv)
+BEGIN_EXPORTED_FUNCTION(SYMBOL(_ZN4xiao9EntryStubEv))
                             // implied: function ptr on stack
                             // implied: rsi (return address) on stack
     PUSHA                   // save all regs
@@ -19,7 +29,7 @@ BEGIN_EXPORTED_FUNCTION(__ZN4xiao9EntryStubEv)
     // call xiao::Function::Enter
     lea XIAO_PLUS_EIGHT(0,XIAO_MCONTEXT_SIZE) (%rsp), REG_ARG1
     lea XIAO_MCONTEXT_SIZE (%rsp), REG_ARG2
-    call __ZN4xiao8Function16instrument_enterEPNS_14MachineContextE
+    call SYMBOL(_ZN4xiao8Function16instrument_enterEPNS_14MachineContextE)
 
     // restore return address
     mov XIAO_MCONTEXT_SIZE (%rsp), REG_ARG1
@@ -36,7 +46,7 @@ END_FUNCTION
 // exit point on a return path; a tail call is made to this function
 // instead of returning, thus this function is responsible for doing
 // the return for the function being instrumented
-BEGIN_EXPORTED_FUNCTION(__ZN4xiao10ReturnStubEv)
+BEGIN_EXPORTED_FUNCTION(SYMBOL(_ZN4xiao10ReturnStubEv))
                             // implied: return address on stack
                             // implied: function address on stack
     PUSHA
@@ -57,7 +67,7 @@ BEGIN_EXPORTED_FUNCTION(__ZN4xiao10ReturnStubEv)
                             // implied: function ptr on stack
                             // implied: rsi (return address) on stack
 
-    call __ZN4xiao8Function17instrument_returnEPNS_14MachineContextE
+    call SYMBOL(_ZN4xiao8Function17instrument_returnEPNS_14MachineContextE)
 
     // restore return address
     mov XIAO_MCONTEXT_SIZE (%rsp), REG_ARG1
@@ -71,16 +81,20 @@ BEGIN_EXPORTED_FUNCTION(__ZN4xiao10ReturnStubEv)
 
 END_FUNCTION
 
+#ifdef __APPLE__
     .section    __DATA,__data
+#else
+    .data
+#endif
 
 /*
 // exit point on a tail-call path
-BEGIN_EXPORTED_FUNCTION(__ZN4xiao16NonLocalJumpStubEv)
+BEGIN_EXPORTED_FUNCTION(SYMBOL(_ZN4xiao16NonLocalJumpStubEv))
     ret
 END_FUNCTION
 
 // re-entry point on tail-recursion path
-BEGIN_EXPORTED_FUNCTION(__ZN4xiao13LocalJumpStubEv)
+BEGIN_EXPORTED_FUNCTION(SYMBOL(_ZN4xiao13LocalJumpStubEv))
     ret
 END_FUNCTION
 */

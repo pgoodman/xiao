@@ -46,6 +46,7 @@ public:
     ~Function(void) throw();
 
     void add_patch(AbstractPatch *) throw();
+    void apply_patches(void) throw();
 
     void instrument_enter(MachineContext *) throw();
     void instrument_return(MachineContext *) throw();

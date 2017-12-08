@@ -39,45 +39,54 @@ def patch_lines(lines):
         if "#" == line[0]:
             continue
 
+        line = line.strip()
+
         # handle main; note: this assumes that main is never called from another
         # function
         if line.startswith("_main:"):
-            out_lines.append("_instrumented_main:                     ## @instrumented_main")
+            out_lines.append("_instrumented_main:")
             in_procedure = False
             continue
-        elif "\t.globl\t_main" == line:
+        elif line.startswith("main:"):
+            out_lines.append("instrumented_main:")
+            in_procedure = False
+            continue
+        elif ".globl\t_main" == line:
             out_lines.append("\t.globl\t_instrumented_main")
+            continue
+        elif ".globl\tmain" == line:
+            out_lines.append("\t.globl\tinstrumented_main")
             continue
         else:
             out_lines.append(line)
 
         # patch the beginning of a procedure
-        if line.startswith("\t.cfi_startproc"):
+        if ".cfi_startproc" in line:
 
             directive = out_lines.pop()
             func_label = out_lines.pop()
 
             # ensure 16 byte alignment of all function entry points
-            if out_lines[-1].startswith("\t.align"):
+            if out_lines[-1].strip().startswith(".align"):
                 out_lines.pop()
 
             out_lines.extend(["\t.align\t16, 0x90", func_label, directive])
 
             in_procedure = True
-            out_lines.extend(["\tjmp LtmpX%d" % i] + (["\tnop"] * 10) + ["LtmpX%d" % i + ":"])
+            out_lines.extend(["\tjmp LtmpX%d" % i] + (["\tnop"] * 13) + ["LtmpX%d" % i + ":"])
 
         # end of a procedure
-        elif "\t.cfi_endproc" == line:
+        elif ".cfi_endproc" in line:
             #out_lines.pop()
             in_producedure = False
 
         # tail call to another procedure
         elif TAIL_CALL.match(line):
-            out_lines.extend(["\tnop"] * 10 + [out_lines.pop(), "\tint\t$3"])
+            out_lines.extend(["\tnop"] * 16 + [out_lines.pop(), "\tint\t$3"])
 
         # return from a procedure
         elif FUNCTION_RETURN.match(line):
-            out_lines.extend(["\tnop"] * 10 + ["\tint\t$3"])
+            out_lines.extend(["\tnop"] * 16 + ["\tint\t$3"])
 
         # call frame information directive
         #elif line.startswith("\t.cfi"):

@@ -16,14 +16,14 @@
 namespace xiao {
 
 template <typename ToT, typename FromT>
-XIAO_ALWAYS_INLINE ToT unsafe_cast(const FromT &v) throw()  {
+inline static ToT unsafe_cast(const FromT &v) throw()  {
     ToT dest;
     memcpy(&dest, &v, sizeof(ToT));
     return dest;
 }
 
 template <typename ToT, typename FromT>
-XIAO_ALWAYS_INLINE ToT unsafe_cast(FromT *v) throw() {
+inline static ToT unsafe_cast(FromT *v) throw() {
     return unsafe_cast<ToT>(
         reinterpret_cast<uintptr_t>(v)
     );

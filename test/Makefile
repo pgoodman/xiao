@@ -1,5 +1,5 @@
 
-CC = ~/Code/xiao/scripts/cxx.py
+CC = ../scripts/cxx.py
 OBJS = tc.o
 
 all: $(OBJS)

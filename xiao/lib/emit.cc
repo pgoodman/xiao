@@ -7,6 +7,8 @@
  */
 
 #include <cstring>
+#include <cstdint>
+#include <cstddef>
 
 #include "xiao/include/emit.h"
 #include "xiao/include/unsafe_cast.h"
@@ -15,17 +17,21 @@
 
 namespace xiao { namespace emit {
 
-/// push a 32 bit value onto the stack
-code_t push_imm32(code_t begin, uint32_t val) {
-    uint8_t PUSH_OP[] = {
-        0xFF, 0x34, 0x25,
-        U8((val >> 24) & 0xFF),
+/// move a 64 bit value into r10.
+code_t mov_imm64(code_t begin, uint64_t val) {
+    uint8_t MOV_OP[] = {
+        0x49, 0xba,
+        U8((val >>  0) & 0xFF),
+        U8((val >>  8) & 0xFF),
         U8((val >> 16) & 0xFF),
-        U8((val >> 8) & 0xFF),
-        U8((val >> 0) & 0xFF)
+        U8((val >> 24) & 0xFF),
+        U8((val >> 32) & 0xFF),
+        U8((val >> 40) & 0xFF),
+        U8((val >> 48) & 0xFF),
+        U8((val >> 56) & 0xFF)
     };
-    memcpy(begin, PUSH_OP, sizeof PUSH_OP);
-    return begin + sizeof PUSH_OP;
+    memcpy(begin, MOV_OP, sizeof MOV_OP);
+    return begin + sizeof MOV_OP;
 }
 
 /// patch a block of code with a call to a specific function. Returns a pointer to the

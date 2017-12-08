@@ -112,7 +112,7 @@ int main(int argc, char **argv) throw() {
 
     // build the command string
     char command[1024] = {'\0'};
-    sprintf(&(command[0]), "llvm-objdump -section-headers %s", argv[0]);
+    sprintf(&(command[0]), "llvm-objdump-3.8 -section-headers %s", argv[0]);
 
     // run llvm's objdump and get info about section headers
     FILE *fp(popen(command, "r"));
@@ -121,10 +121,18 @@ int main(int argc, char **argv) throw() {
         return 1;
     }
 
+#ifdef __APPLE__
+    const char *text = "__text";
+    const size_t text_len = 7;
+#else
+    const char *text = ".text";
+    const size_t text_len = 6;
+#endif
+
     // go look for info about the text section
     char line[1024] = {'\0'};
     while(fgets(line, sizeof(line) - 1, fp)) {
-        if(NULL != strstr(line, "__text")) {
+        if(NULL != strstr(line, text)) {
             break;
         }
         line[0] = '\0';
@@ -139,19 +147,35 @@ int main(int argc, char **argv) throw() {
 
     // find the beginning address and size of the text segment, then patch
     // the binary
-    char *size_and_start = strstr(line, "__text ") + 7;
+    char *size_and_start = strstr(line, text) + text_len;
     *strstr(line, " TEXT") = '\0';
 
     // inclusive range of start and end address of the .text segment
     uint64_t text_size(0ULL);
     uint64_t text_start(0ULL);
     sscanf(size_and_start, "%" PRIX64 " %" PRIX64, &text_size, &text_start);
+    
+    printf("XIAO: Text section [%lx, %lx)\n", text_start,
+           text_start + text_size);
 
     // find the patch points
     xiao::FindFunctionPatchPoints(
         xiao::unsafe_cast<xiao::code_t>(text_start),
         xiao::unsafe_cast<xiao::code_t>(text_start + text_size + 1)
     );
+
+    printf("XIAO: Found %zu functions\n", xiao::FUNCTIONS.size());
+
+    mprotect(reinterpret_cast<void *>(text_start & ~4095ULL), text_size,
+             PROT_READ | PROT_WRITE | PROT_EXEC);
+
+    printf("XIAO: Patching functions...\n");
+    for (xiao::Function *func_to_patch : xiao::FUNCTIONS) {
+        func_to_patch->apply_patches();
+    }
+
+    mprotect(reinterpret_cast<void *>(text_start & ~4095ULL), text_size,
+             PROT_READ | PROT_EXEC);
 
     // call the main program
     int ret(instrumented_main(argc, argv));
